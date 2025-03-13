@@ -1,17 +1,33 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/mrjkey/aggregator/internal/config"
+	"github.com/mrjkey/aggregator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	gator_config := config.Read()
+	db, err := sql.Open("postgres", gator_config.Db_url)
+	if err != nil {
+		fmt.Println("error opening database")
+		os.Exit(1)
+	}
+
+	dbQueries := database.New(db)
+
 	s := state{
-		Config: &gator_config,
+		db:  dbQueries,
+		cfg: &gator_config,
 	}
 
 	comms := commands{
@@ -19,6 +35,8 @@ func main() {
 	}
 
 	comms.register("login", handlerLogin)
+	comms.register("register", handlerRegister)
+	comms.register("reset", handlerReset)
 
 	args := os.Args
 	if len(args) < 2 {
@@ -33,7 +51,7 @@ func main() {
 		args: args[2:],
 	}
 
-	err := comms.run(&s, cmd)
+	err = comms.run(&s, cmd)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -45,7 +63,8 @@ func main() {
 }
 
 type state struct {
-	Config *config.Config
+	db  *database.Queries
+	cfg *config.Config
 }
 
 type command struct {
@@ -72,11 +91,17 @@ func (c *commands) run(s *state, cmd command) error {
 
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.args) < 1 {
-		return errors.New("the login handler expects a single argument, the username.")
+		return errors.New("the login handler expects a single argument, the username")
 	}
 
 	username := cmd.args[0]
-	err := s.Config.SetUser(username)
+
+	user, err := s.db.GetUser(context.Background(), username)
+	if err != nil {
+		return err
+	}
+
+	err = s.cfg.SetUser(user.Name)
 	if err != nil {
 		return err
 	}
@@ -84,4 +109,36 @@ func handlerLogin(s *state, cmd command) error {
 	fmt.Printf("User has been set to: %v\n", username)
 
 	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.args) < 1 {
+		return errors.New("the login handler expects a single argument, the username")
+	}
+
+	username := cmd.args[0]
+	args := database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      username,
+	}
+
+	// _, err := s.db.GetUser(context.Background(), username)
+
+	user, err := s.db.CreateUser(context.Background(), args)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("User has been created: %v\n", user.Name)
+
+	s.cfg.SetUser(user.Name)
+
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	err := s.db.RemoveAllUsers(context.Background())
+	return err
 }
