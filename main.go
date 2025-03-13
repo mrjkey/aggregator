@@ -37,6 +37,7 @@ func main() {
 	comms.register("login", handlerLogin)
 	comms.register("register", handlerRegister)
 	comms.register("reset", handlerReset)
+	comms.register("users", handlerUsers)
 
 	args := os.Args
 	if len(args) < 2 {
@@ -141,4 +142,21 @@ func handlerRegister(s *state, cmd command) error {
 func handlerReset(s *state, cmd command) error {
 	err := s.db.RemoveAllUsers(context.Background())
 	return err
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		current := ""
+		if user.Name == s.cfg.Current_user_name {
+			current = "(current)"
+		}
+		fmt.Printf("* %v %v\n", user.Name, current)
+	}
+
+	return nil
 }
