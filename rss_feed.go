@@ -3,9 +3,15 @@ package main
 import (
 	"context"
 	"encoding/xml"
+	"errors"
+	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/mrjkey/aggregator/internal/database"
 )
 
 type RSSFeed struct {
@@ -59,3 +65,60 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	return &feed, nil
 }
+
+// fetchFeed
+func handlerAgg(s *state, cmd command) error {
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("not enough arguments")
+	}
+
+	name := cmd.args[0]
+	url := cmd.args[1]
+
+	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	args := database.AddFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      name,
+		Url:       url,
+		UserID:    user.ID,
+	}
+
+	feed, err := s.db.AddFeed(context.Background(), args)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
+
+// func handlerGetFeeds(s *state, _ command) error {
+// 	feeds, err := s.db.GetFeeds(context.Background())
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	for _, values := range feeds {
+// 		fmt.Println(values.Name, values.Url, values.Name_2)
+// 	}
+
+// 	return nil
+// }

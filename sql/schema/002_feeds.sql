@@ -4,12 +4,7 @@ create table feeds (
     created_at timestamp not null,
     updated_at timestamp not null,
     name text not null,
-    url  text unique not null,
-    user_id uuid not null,
-    constraint fk_user_id
-        foreign key (user_id)
-        references users(id) 
-        on delete cascade
+    url  text unique not null
 );
 
 -- +goose Down
