@@ -41,6 +41,8 @@ func main() {
 	comms.register("agg", handlerAgg)
 	comms.register("addfeed", handlerAddFeed)
 	// comms.register("feeds", handlerGetFeeds)
+	comms.register("follow", handlerFollow)
+	comms.register("following", handlerFollowing)
 
 	args := os.Args
 	if len(args) < 2 {
@@ -144,7 +146,14 @@ func handlerRegister(s *state, cmd command) error {
 
 func handlerReset(s *state, cmd command) error {
 	err := s.db.RemoveAllUsers(context.Background())
-	return err
+	if err != nil {
+		return err
+	}
+	err = s.db.RemoveAllFeeds(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func handlerUsers(s *state, cmd command) error {

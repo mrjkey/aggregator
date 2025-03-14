@@ -8,6 +8,12 @@ returning *;
 -- from feeds
 -- left join users on feeds.user_id = users.id;
 
+
+-- name: GetFeedByUrl :one
+select *
+from feeds
+where feeds.url = $1;
+
 -- name: CreateFeedFollow :one
 with inserted_feed_follow as (
     insert into feed_follows (created_at, updated_at, user_id, feed_id)
@@ -18,3 +24,13 @@ select inserted_feed_follow.* , feeds.name as feed_name, users.name as user_name
 from inserted_feed_follow
 inner join users on inserted_feed_follow.user_id = users.id 
 inner join feeds on inserted_feed_follow.feed_id = feeds.id;
+
+-- name: GetFeedFollowersForUser :many
+select feed_follows.*, feeds.name as feed_name, users.name as user_name
+from feed_follows
+inner join users on feed_follows.user_id = users.id
+inner join feeds on feed_follows.feed_id = feeds.id
+where feed_follows.user_id = $1;
+
+-- name: RemoveAllFeeds :exec
+delete from feeds;
