@@ -39,6 +39,7 @@ func main() {
 	comms.register("reset", handlerReset)
 	comms.register("users", handlerUsers)
 	comms.register("agg", handlerAgg)
+	comms.register("addfeed", handlerAddFeed)
 
 	args := os.Args
 	if len(args) < 2 {
@@ -165,6 +166,38 @@ func handlerUsers(s *state, cmd command) error {
 // fetchFeed
 func handlerAgg(s *state, cmd command) error {
 	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("not enough arguments")
+	}
+
+	name := cmd.args[0]
+	url := cmd.args[1]
+
+	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	args := database.AddFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      name,
+		Url:       url,
+		UserID:    user.ID,
+	}
+
+	feed, err := s.db.AddFeed(context.Background(), args)
 	if err != nil {
 		return err
 	}
