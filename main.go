@@ -39,10 +39,10 @@ func main() {
 	comms.register("reset", handlerReset)
 	comms.register("users", handlerUsers)
 	comms.register("agg", handlerAgg)
-	comms.register("addfeed", handlerAddFeed)
+	comms.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	// comms.register("feeds", handlerGetFeeds)
-	comms.register("follow", handlerFollow)
-	comms.register("following", handlerFollowing)
+	comms.register("follow", middlewareLoggedIn(handlerFollow))
+	comms.register("following", middlewareLoggedIn(handlerFollowing))
 
 	args := os.Args
 	if len(args) < 2 {
@@ -171,4 +171,16 @@ func handlerUsers(s *state, cmd command) error {
 	}
 
 	return nil
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	newFunc := func(s *state, cmd command) error {
+		user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+		if err != nil {
+			return err
+		}
+
+		return handler(s, cmd, user)
+	}
+	return newFunc
 }
