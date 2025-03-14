@@ -38,6 +38,7 @@ func main() {
 	comms.register("register", handlerRegister)
 	comms.register("reset", handlerReset)
 	comms.register("users", handlerUsers)
+	comms.register("agg", handlerAgg)
 
 	args := os.Args
 	if len(args) < 2 {
@@ -157,6 +158,18 @@ func handlerUsers(s *state, cmd command) error {
 		}
 		fmt.Printf("* %v %v\n", user.Name, current)
 	}
+
+	return nil
+}
+
+// fetchFeed
+func handlerAgg(s *state, cmd command) error {
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
 
 	return nil
 }
