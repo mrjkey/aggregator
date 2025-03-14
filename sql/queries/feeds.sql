@@ -34,3 +34,10 @@ where feed_follows.user_id = $1;
 
 -- name: RemoveAllFeeds :exec
 delete from feeds;
+
+-- name: DeleteFeedFollow :exec
+delete from feed_follows
+using feeds
+where feed_follows.feed_id = feeds.id
+and feed_follows.user_id = $1
+and feeds.url = $2;
