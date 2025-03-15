@@ -9,6 +9,7 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -227,11 +228,67 @@ func scrapeFeeds(s *state) error {
 	fmt.Printf("For feed: %v\n", nextFeed.Name)
 	// iterate over the items
 	for _, item := range rssFeed.Channel.Items {
-		fmt.Println(item.Title)
-		break
+		savePost(s, item, nextFeed)
+		// fmt.Println(item.Title)
+		// break
 	}
 
 	fmt.Println()
+
+	return nil
+}
+
+func savePost(s *state, item RSSItem, feed database.Feed) error {
+	publishedAt, err := time.Parse(time.RFC1123, item.PubDate)
+	if err != nil {
+		publishedAt, err = time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			publishedAt = time.Now()
+		}
+	}
+
+	params := database.CreatePostParams{
+		ID:          uuid.New(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Title:       item.Title,
+		Url:         item.Link,
+		Description: sql.NullString{String: item.Description, Valid: true},
+		PublishedAt: publishedAt,
+		FeedID:      feed.ID,
+	}
+
+	_, err = s.db.CreatePost(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handlerBrowser(s *state, cmd command, user database.User) error {
+	limit := 2
+	if len(cmd.args) > 0 {
+		conv, err := strconv.Atoi(cmd.args[0])
+		if err != nil {
+			return err
+		}
+		limit = conv
+	}
+
+	params := database.GetPostsForUserParams{
+		ID:    user.ID,
+		Limit: int32(limit),
+	}
+
+	posts, err := s.db.GetPostsForUser(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	for _, post := range posts {
+		fmt.Printf("%v:\n\n%v\n\n\n", post.Title, post.Description)
+	}
 
 	return nil
 }

@@ -16,7 +16,7 @@ import (
 const addFeed = `-- name: AddFeed :one
 insert into feeds (id, created_at, updated_at, name, url)
 values ($1, $2, $3, $4, $5)
-returning id, created_at, updated_at, name, url, last_fetched_at, titties
+returning id, created_at, updated_at, name, url, last_fetched_at
 `
 
 type AddFeedParams struct {
@@ -43,7 +43,6 @@ func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (Feed, error) 
 		&i.Name,
 		&i.Url,
 		&i.LastFetchedAt,
-		&i.Titties,
 	)
 	return i, err
 }
@@ -116,7 +115,7 @@ func (q *Queries) DeleteFeedFollow(ctx context.Context, arg DeleteFeedFollowPara
 const getFeedByUrl = `-- name: GetFeedByUrl :one
 
 
-select id, created_at, updated_at, name, url, last_fetched_at, titties
+select id, created_at, updated_at, name, url, last_fetched_at
 from feeds
 where feeds.url = $1
 `
@@ -135,7 +134,6 @@ func (q *Queries) GetFeedByUrl(ctx context.Context, url string) (Feed, error) {
 		&i.Name,
 		&i.Url,
 		&i.LastFetchedAt,
-		&i.Titties,
 	)
 	return i, err
 }
@@ -188,7 +186,7 @@ func (q *Queries) GetFeedFollowersForUser(ctx context.Context, userID uuid.UUID)
 }
 
 const getNextFeedToFetch = `-- name: GetNextFeedToFetch :one
-select id, created_at, updated_at, name, url, last_fetched_at, titties 
+select id, created_at, updated_at, name, url, last_fetched_at 
 from feeds
 order by feeds.last_fetched_at asc nulls first
 limit 1
@@ -204,7 +202,6 @@ func (q *Queries) GetNextFeedToFetch(ctx context.Context) (Feed, error) {
 		&i.Name,
 		&i.Url,
 		&i.LastFetchedAt,
-		&i.Titties,
 	)
 	return i, err
 }
