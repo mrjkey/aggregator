@@ -19,6 +19,26 @@ go run . agg <wait time interval> # gets posts from all the feeds of the current
 go run . browse <option number> # browse the posts of the current user, can specify how many
 ```
 
+## setup
+
+need:
+
+- go
+- postgres
+- goose
+- sqlc
+
+there is an example config file in the top level, but you need to setup the file in ~/.gatorconfig.json
+
+```json
+{
+  "db_url": "postgres://<user>:<password>@localhost:5432/gator?sslmode=disable",
+  "current_user_name": "dave"
+}
+```
+
+the postgres url should be adjust to the user and password you use
+
 ## build up
 
 ```bash
