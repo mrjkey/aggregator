@@ -185,6 +185,27 @@ func (q *Queries) GetFeedFollowersForUser(ctx context.Context, userID uuid.UUID)
 	return items, nil
 }
 
+const getNextFeedToFetch = `-- name: GetNextFeedToFetch :one
+select id, created_at, updated_at, name, url, last_fetched_at 
+from feeds
+order by feeds.last_fetched_at asc nulls first
+limit 1
+`
+
+func (q *Queries) GetNextFeedToFetch(ctx context.Context) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, getNextFeedToFetch)
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Url,
+		&i.LastFetchedAt,
+	)
+	return i, err
+}
+
 const markFeedFetched = `-- name: MarkFeedFetched :exec
 update feeds 
 set last_fetched_at = $2, updated_at = $3
