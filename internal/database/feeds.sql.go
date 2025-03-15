@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ import (
 const addFeed = `-- name: AddFeed :one
 insert into feeds (id, created_at, updated_at, name, url)
 values ($1, $2, $3, $4, $5)
-returning id, created_at, updated_at, name, url
+returning id, created_at, updated_at, name, url, last_fetched_at
 `
 
 type AddFeedParams struct {
@@ -41,6 +42,7 @@ func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (Feed, error) 
 		&i.UpdatedAt,
 		&i.Name,
 		&i.Url,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
@@ -113,7 +115,7 @@ func (q *Queries) DeleteFeedFollow(ctx context.Context, arg DeleteFeedFollowPara
 const getFeedByUrl = `-- name: GetFeedByUrl :one
 
 
-select id, created_at, updated_at, name, url
+select id, created_at, updated_at, name, url, last_fetched_at
 from feeds
 where feeds.url = $1
 `
@@ -131,6 +133,7 @@ func (q *Queries) GetFeedByUrl(ctx context.Context, url string) (Feed, error) {
 		&i.UpdatedAt,
 		&i.Name,
 		&i.Url,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
@@ -180,6 +183,23 @@ func (q *Queries) GetFeedFollowersForUser(ctx context.Context, userID uuid.UUID)
 		return nil, err
 	}
 	return items, nil
+}
+
+const markFeedFetched = `-- name: MarkFeedFetched :exec
+update feeds 
+set last_fetched_at = $2, updated_at = $3
+where id = $1
+`
+
+type MarkFeedFetchedParams struct {
+	ID            uuid.UUID
+	LastFetchedAt sql.NullTime
+	UpdatedAt     time.Time
+}
+
+func (q *Queries) MarkFeedFetched(ctx context.Context, arg MarkFeedFetchedParams) error {
+	_, err := q.db.ExecContext(ctx, markFeedFetched, arg.ID, arg.LastFetchedAt, arg.UpdatedAt)
+	return err
 }
 
 const removeAllFeeds = `-- name: RemoveAllFeeds :exec

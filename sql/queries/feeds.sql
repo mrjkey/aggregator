@@ -41,3 +41,8 @@ using feeds
 where feed_follows.feed_id = feeds.id
 and feed_follows.user_id = $1
 and feeds.url = $2;
+
+-- name: MarkFeedFetched :exec
+update feeds 
+set last_fetched_at = $2, updated_at = $3
+where id = $1;
