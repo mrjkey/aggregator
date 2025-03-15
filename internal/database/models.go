@@ -18,6 +18,7 @@ type Feed struct {
 	Name          string
 	Url           string
 	LastFetchedAt sql.NullTime
+	Titties       sql.NullTime
 }
 
 type FeedFollow struct {
@@ -25,13 +26,6 @@ type FeedFollow struct {
 	UpdatedAt time.Time
 	UserID    uuid.UUID
 	FeedID    uuid.UUID
-}
-
-type GooseDbVersion struct {
-	ID        int32
-	VersionID int64
-	IsApplied bool
-	Tstamp    time.Time
 }
 
 type User struct {

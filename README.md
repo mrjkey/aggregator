@@ -32,6 +32,14 @@ go get github.com/lib/pq
 
 # troubleshooting
 
+Edit: the solution is you need to capitilize Up and Down in the goose migration file, or it doesn't see it
+
+```sql
+-- +goose Up
+...
+-- +goose Down
+```
+
 I ran into a problem generating the sqlc files. this happened after I added a new migration sql file
 
 ```sql
