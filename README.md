@@ -2,6 +2,23 @@
 
 psql postgres://postgres:a@localhost:5432/gator
 
+## How to use
+
+The following commands are available
+
+```bash
+go run . reset # reset the database, deletes users and feeds
+go run . register <username> # register a new user
+go run . login <username> # login as a user, must already be registered
+go run . users # list all users, shows the current user as well
+go run . addfeed <feed name> <feed url> # add an rss feed to the database, and the current user follows this
+go run . follow <feed url> # follow a feed
+go run . unfollow <feed url> # unfollow a feed
+go run . following # list all feeds the current user is following
+go run . agg <wait time interval> # gets posts from all the feeds of the current user. time interval is 1s, 1m, 1h, 1d etc.
+go run . browse <option number> # browse the posts of the current user, can specify how many
+```
+
 ## build up
 
 ```bash
