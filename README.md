@@ -111,3 +111,28 @@ sqlc generate
 ```
 
 just re-running the migration did not work.
+
+### db setup
+
+sudo apt install postgresql postgresql-contrib
+psql --version
+sudo passwd postgres
+sudo -u postgres psql
+CREATE DATABASE gator;
+
+ALTER USER postgres PASSWORD 'a';
+
+migrate
+
+cd sql/schema
+goose postgres postgres://postgres:a@localhost:5432/gator up
+
+### example input
+
+``` bash
+go run . register jared
+go run . addfeed "TechCrunch" "https://techcrunch.com/feed/"
+go run . addfeed "Hacker News" "https://news.ycombinator.com/rss"
+go run . agg 5s
+go run . browse 5
+```
