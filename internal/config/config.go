@@ -40,18 +40,19 @@ func Read() Config {
 	return config
 }
 
-func (c *Config) SetUser(username string) {
+func (c *Config) SetUser(username string) error {
 	c.Current_user_name = username
 
 	json_data, err := json.Marshal(c)
 	if err != nil {
 		fmt.Println("failed to marshal data")
-		return
+		return err
 	}
 	filename := getFileName()
 	err = os.WriteFile(filename, json_data, 0644)
 	if err != nil {
 		fmt.Printf("failed to write file with err: %v", err)
-		return
+		return err
 	}
+	return nil
 }
